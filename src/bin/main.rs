@@ -16,7 +16,7 @@ use esp_hal::rtc_cntl::Rtc;
 use esp_hal::spi::{master::{Config, Spi}, DataMode, Mode};
 use embedded_hal::digital::OutputPin;
 use embedded_hal::digital::StatefulOutputPin;
-
+use esp_hal::i2c::master::{I2c, Config as i2cConfig};
 
 use log::info;
 
@@ -66,7 +66,7 @@ fn main() -> ! {
     let cs = Output::new(peripherals.GPIO12,  Level::Low);
 
     let spi = Spi::new(peripherals.SPI2,Config::default(),).unwrap().with_miso(miso).with_mosi(mosi).with_sck(sck);
-    let config = Config::default().with_frequency(62500.kHz()).with_mode(Mode::_0); 
+    let config = Config::default().with_frequency(6500.kHz()).with_mode(Mode::_0); 
 
     let spi_device = embedded_hal_bus::spi::ExclusiveDevice::new(spi, cs, delay).unwrap();
 
@@ -96,7 +96,23 @@ fn main() -> ! {
     .unwrap();
 
     let delay = Delay::new();
+
+
+    //let mut i2c = I2c::new(peripherals.I2C0, i2cConfig::default(),).unwrap().with_sda(peripherals.GPIO18).with_scl(peripherals.GPIO8);
+    let mut i2c = I2c::new(peripherals.I2C0, {
+        let mut i2c_config = i2cConfig::default();
+        i2c_config.frequency = 100.kHz();
+        i2c_config.timeout;
+        i2c_config
+    },).unwrap().with_sda(peripherals.GPIO18).with_scl(peripherals.GPIO8);
+
+     
+
     loop {
+
+        let mut data = [0u8; 1];
+        i2c.write_read(0x55, &[0xaa], &mut data).ok(); //0x55 is T-keyboard I2C ADDRESS !
+        info!("data: {:#?}", data);
 
         let character_style = MonoTextStyle::new(&FONT_10X20, Rgb565::WHITE);
          // Draw centered text.
@@ -109,19 +125,24 @@ fn main() -> ! {
         )
         .draw(&mut display);
 
-        info!("Hello world!");
+        //info!("Hello world!");
         delay.delay_millis(500);
-
+        //display.clear(Rgb565::BLACK).unwrap();
+        //delay.delay_millis(500);
+/*
         let character_style = MonoTextStyle::new(&FONT_10X20, Rgb565::WHITE);
          // Draw centered text.
         let text = "Alright Brother :D";
         Text::with_alignment(
             text,
-            display.bounding_box().center() + Point::new(3, 10),
+            display.bounding_box().center() + Point::new(20, 20),
             character_style,
             Alignment::Center,
         )
         .draw(&mut display);
+        */
+        //delay.delay_millis(500);
+        //display.clear(Rgb565::BLACK).unwrap();
     }
 
     // for inspiration have a look at the examples at https://github.com/esp-rs/esp-hal/tree/v0.23.1/examples/src/bin
