@@ -17,19 +17,22 @@ use esp_hal::spi::{master::{Config, Spi}, DataMode, Mode};
 use embedded_hal::digital::OutputPin;
 use embedded_hal::digital::StatefulOutputPin;
 
+
 use log::info;
 
 use embedded_hal_bus::spi::ExclusiveDevice;
 
 use embedded_graphics::{
-    pixelcolor::Rgb565,
+    pixelcolor::{Rgb565, BinaryColor},
     prelude::*,
     primitives::{Circle, Primitive, PrimitiveStyle, Triangle},
+    text::{Alignment, Text},
+    mono_font::{ascii::FONT_6X10, ascii::FONT_10X20, MonoTextStyle},
 };
 
 use mipidsi::interface::SpiInterface;
 use mipidsi::{Builder, models::ST7789};
-use mipidsi::options::ColorInversion;
+use mipidsi::options::{ColorInversion, Orientation, Rotation};
 
 
 use fugit::RateExtU32;
@@ -70,13 +73,15 @@ fn main() -> ! {
     let mut buffer = [0_u8; 512];
     let di = SpiInterface::new(spi_device, dc, &mut buffer);
 
-    let mut display = Builder::new(ST7789, di).display_size(240, 320).invert_colors(ColorInversion::Inverted).init(&mut delay).unwrap();
+    let mut display = Builder::new(ST7789, di).display_size(240, 320).orientation(Orientation::new().rotate(Rotation::Deg90)).invert_colors(ColorInversion::Inverted).init(&mut delay).unwrap();
 
-    display.clear(Rgb565::GREEN).unwrap();
+    display.clear(Rgb565::BLACK).unwrap();
 
+    /*
     let style = embedded_graphics::primitives::PrimitiveStyleBuilder::new()
-        .fill_color(Rgb565::GREEN)
+        .fill_color(Rgb565::BLACK)
         .build();
+*/
 
     esp_println::logger::init_logger_from_env();
 
@@ -93,17 +98,30 @@ fn main() -> ! {
     let delay = Delay::new();
     loop {
 
-        let style = embedded_graphics::primitives::PrimitiveStyleBuilder::new()
-        .fill_color(Rgb565::WHITE)
-        .build();
-
-        embedded_graphics::primitives::Rectangle::new(Point::zero(), display.bounding_box().size)
-        .into_styled(style)
-        .draw(&mut display)
-        .unwrap();
+        let character_style = MonoTextStyle::new(&FONT_10X20, Rgb565::WHITE);
+         // Draw centered text.
+        let text = "Alright Brother :D";
+        Text::with_alignment(
+            text,
+            display.bounding_box().center() + Point::new(0, 15),
+            character_style,
+            Alignment::Center,
+        )
+        .draw(&mut display);
 
         info!("Hello world!");
         delay.delay_millis(500);
+
+        let character_style = MonoTextStyle::new(&FONT_10X20, Rgb565::WHITE);
+         // Draw centered text.
+        let text = "Alright Brother :D";
+        Text::with_alignment(
+            text,
+            display.bounding_box().center() + Point::new(3, 10),
+            character_style,
+            Alignment::Center,
+        )
+        .draw(&mut display);
     }
 
     // for inspiration have a look at the examples at https://github.com/esp-rs/esp-hal/tree/v0.23.1/examples/src/bin
