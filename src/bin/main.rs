@@ -42,29 +42,8 @@ use embedded_graphics::pixelcolor::*;
 use embedded_graphics::primitives::*;
 use embedded_graphics::Drawable;
 
-//use display_interface_spi::SPIInterface;
-
 extern crate alloc;
 
-/*
-pub struct Config {
-    /// SPI bus clock frequency.
-    pub frequency: HertzU32,
-
-    /// SPI sample/shift mode.
-    pub mode: Mode
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        use fugit::RateExtU32;
-        Config {
-            frequency: 1_u32.MHz(),
-            mode: Mode::_0,
-        }
-    }
-}
-*/
 
 #[main]
 fn main() -> ! {
@@ -73,8 +52,6 @@ fn main() -> ! {
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
 
-//////
-    //let io = Io::new(peripherals.GPIO, peripherals.IO_MUX);
     let mut delay = Delay::new();
 
     let lcb_en = Output::new(peripherals.GPIO42, Level::High);//  Level::Low);
@@ -92,14 +69,10 @@ fn main() -> ! {
     let spi = Spi::new(peripherals.SPI2,Config::default(),).unwrap().with_miso(miso).with_mosi(mosi).with_sck(sck);
     let config = Config::default().with_frequency(62500.kHz()).with_mode(Mode::_0); 
 
-    //let cs_output = OutputPin::new(cs, Level::High);
-    //let spi_device = ExclusiveDevice::new_no_delay(spi, &mut cs).unwrap();
-
     let spi_device = embedded_hal_bus::spi::ExclusiveDevice::new(spi, cs, delay).unwrap();
 
     let mut buffer = [0_u8; 512];
     let di = SpiInterface::new(spi_device, dc, &mut buffer);
-    //let display_model = mipidsi::models::ST7789;
 
     let mut display = Builder::new(ST7789, di).display_size(240, 320).invert_colors(ColorInversion::Inverted).init(&mut delay).unwrap();
 
@@ -109,28 +82,6 @@ fn main() -> ! {
         .fill_color(Rgb565::GREEN)
         .build();
 
-/*
-    let style = embedded_graphics::primitives::PrimitiveStyleBuilder::new()
-        .fill_color(Rgb565::GREEN)
-        .build();
-
-    embedded_graphics::primitives::Rectangle::new(Point::zero(), display.bounding_box().size)
-        .into_styled(style)
-        .draw(&mut display)
-        .unwrap();
-
-*/
-    //let mut display = mipidsi::Builder::new(display_model, di)
-    //let mut display = mipidsi::Builder::new(display_model, di).init(&mut delay).init(&mut delay).unwrap();
-
-
-    // create the ILI9486 display driver in rgb666 color mode from the display interface and use a HW reset pin during init
-    //let mut display = Builder::new(display_model, di)
-    //    .init(&mut delay)?; // delay provider from your MCU
-    // clear the display to black
-    //display.clear(Rgb666::BLACK)?;
-
-///////
     esp_println::logger::init_logger_from_env();
 
     esp_alloc::heap_allocator!(72 * 1024);
