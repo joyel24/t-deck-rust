@@ -11,8 +11,7 @@ use esp_hal::gpio::{
         Level,
         Output,
         Pull,};
-use esp_hal::peripheral::{Peripheral}; // needed for `into_ref`
-//use esp_hal::prelude::*;
+use esp_hal::peripheral::{Peripheral};
 use esp_hal::rtc_cntl::Rtc;
 use esp_hal::spi::{master::{Config, Spi}, DataMode, Mode};
 use embedded_hal::digital::OutputPin;
@@ -47,24 +46,21 @@ extern crate alloc;
 
 #[main]
 fn main() -> ! {
-    // generator version: 0.2.2
 
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
 
     let mut delay = Delay::new();
 
-    let lcb_en = Output::new(peripherals.GPIO42, Level::High);//  Level::Low);
-    let lcb_en = Output::new(peripherals.GPIO10, Level::High);//  Level::Low);
+    let lcb_en = Output::new(peripherals.GPIO42, Level::High);
+    let lcb_en = Output::new(peripherals.GPIO10, Level::High);
 
-    let dc = Output::new(peripherals.GPIO11, Level::Low);//  Level::Low);
-    //let mut rst = Output::new(io.pins.gpio8, Level::Low);
+    let dc = Output::new(peripherals.GPIO11, Level::Low);
 
-    let sck = Output::new(peripherals.GPIO40,  Level::Low);//  Level::Low);
+    let sck = Output::new(peripherals.GPIO40,  Level::Low);
     let miso = Output::new(peripherals.GPIO38,  Level::Low);
     let mosi = Output::new(peripherals.GPIO41,  Level::Low);
     let cs = Output::new(peripherals.GPIO12,  Level::Low);
-    //let cs = io.pins.gpio10.into_push_pull_output();
 
     let spi = Spi::new(peripherals.SPI2,Config::default(),).unwrap().with_miso(miso).with_mosi(mosi).with_sck(sck);
     let config = Config::default().with_frequency(62500.kHz()).with_mode(Mode::_0); 
