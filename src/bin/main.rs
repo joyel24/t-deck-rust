@@ -50,7 +50,7 @@ extern crate alloc;
 #[main]
 fn main() -> ! {
 
-    let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
+    let config = esp_hal::Config::default().with_cpu_clock(CpuClock::_80MHz);
     let peripherals = esp_hal::init(config);
 
     let mut delay = Delay::new();
@@ -66,7 +66,7 @@ fn main() -> ! {
     let cs = Output::new(peripherals.GPIO12,  Level::Low);
 
     let spi = Spi::new(peripherals.SPI2,Config::default(),).unwrap().with_miso(miso).with_mosi(mosi).with_sck(sck);
-    let config = Config::default().with_frequency(6500.kHz()).with_mode(Mode::_0); 
+    let config = Config::default().with_frequency(625000.kHz()).with_mode(Mode::_0); 
 
     let spi_device = embedded_hal_bus::spi::ExclusiveDevice::new(spi, cs, delay).unwrap();
 
@@ -107,27 +107,50 @@ fn main() -> ! {
     },).unwrap().with_sda(peripherals.GPIO18).with_scl(peripherals.GPIO8);
 
      
+    let mut DeltaY=0;
+    let mut DeltaX=0;
 
     loop {
 
-        let mut data = [0u8; 1];
+        let mut data = [0u8];
         i2c.write_read(0x55, &[0xaa], &mut data).ok(); //0x55 is T-keyboard I2C ADDRESS !
         info!("data: {:#?}", data);
+
+        let step = 20;
+        if (data == [104u8]){
+            DeltaX +=step;
+        }
+        if (data == [102u8]){
+            DeltaX -=step;
+        }
+        if (data == [118u8]){
+            DeltaY +=step;
+        }
+        if (data == [116u8]){
+            DeltaY -=step;
+        }
 
         let character_style = MonoTextStyle::new(&FONT_10X20, Rgb565::WHITE);
          // Draw centered text.
         let text = "Alright Brother :D";
+
+        display.clear(Rgb565::BLACK);
+        
+        /*let style = embedded_graphics::primitives::PrimitiveStyleBuilder::new()
+            .fill_color(Rgb565::BLACK)
+            .build();*/
+
         Text::with_alignment(
             text,
-            display.bounding_box().center() + Point::new(0, 15),
+            display.bounding_box().center() + Point::new(0+DeltaX, 15+DeltaY),
             character_style,
             Alignment::Center,
         )
         .draw(&mut display);
 
         //info!("Hello world!");
-        delay.delay_millis(500);
-        //display.clear(Rgb565::BLACK).unwrap();
+        //delay.delay_millis(100);
+        
         //delay.delay_millis(500);
 /*
         let character_style = MonoTextStyle::new(&FONT_10X20, Rgb565::WHITE);
