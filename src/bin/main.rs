@@ -17,6 +17,8 @@ use esp_hal::spi::{master::{Config, Spi}, DataMode, Mode};
 use embedded_hal::digital::OutputPin;
 use embedded_hal::digital::StatefulOutputPin;
 use esp_hal::i2c::master::{I2c, Config as i2cConfig};
+use esp_hal::dma_buffers;
+use esp_hal::dma::{DmaPriority, DmaRxBuf, DmaTxBuf};
 
 use log::info;
 
@@ -34,7 +36,6 @@ use mipidsi::interface::SpiInterface;
 use mipidsi::{Builder, models::ST7789};
 use mipidsi::options::{ColorInversion, Orientation, Rotation};
 
-
 use fugit::RateExtU32;
 use fugit::HertzU32;
 
@@ -44,8 +45,9 @@ use embedded_graphics::pixelcolor::*;
 use embedded_graphics::primitives::*;
 use embedded_graphics::Drawable;
 
-extern crate alloc;
+use esp_display_interface_spi_dma::display_interface_spi_dma;
 
+extern crate alloc;
 
 #[main]
 fn main() -> ! {
@@ -65,15 +67,22 @@ fn main() -> ! {
     let mosi = Output::new(peripherals.GPIO41,  Level::Low);
     let cs = Output::new(peripherals.GPIO12,  Level::Low);
 
+    let dma_channel = peripherals.DMA_CH0;
+
     let spi = Spi::new(peripherals.SPI2,Config::default(),).unwrap().with_miso(miso).with_mosi(mosi).with_sck(sck);
+    //let spi = Spi::new(peripherals.SPI2,Config::default(),).unwrap().with_miso(miso).with_mosi(mosi).with_sck(sck).with_dma(dma_channel);
+    
     let config = Config::default().with_frequency(62500.kHz()).with_mode(Mode::_0); 
 
     let spi_device = embedded_hal_bus::spi::ExclusiveDevice::new(spi, cs, delay).unwrap();
 
     let mut buffer = [0_u8; 512];
+    
     let di = SpiInterface::new(spi_device, dc, &mut buffer);
+    //let di = display_interface_spi_dma::new_no_cs(2*240*320, spi, dc);
 
     let mut display = Builder::new(ST7789, di).display_size(240, 320).orientation(Orientation::new().rotate(Rotation::Deg90)).invert_colors(ColorInversion::Inverted).init(&mut delay).unwrap();
+    //let mut display = mipidsi::Builder::new(ST7789, di).display_size(240, 320).orientation(Orientation::new().rotate(Rotation::Deg90)).invert_colors(ColorInversion::Inverted).init(&mut delay).unwrap();
 
     display.clear(Rgb565::BLACK).unwrap();
 
