@@ -50,7 +50,7 @@ extern crate alloc;
 #[main]
 fn main() -> ! {
 
-    let config = esp_hal::Config::default().with_cpu_clock(CpuClock::_80MHz);
+    let config = esp_hal::Config::default().with_cpu_clock(CpuClock::_160MHz);
     let peripherals = esp_hal::init(config);
 
     let mut delay = Delay::new();
@@ -66,7 +66,7 @@ fn main() -> ! {
     let cs = Output::new(peripherals.GPIO12,  Level::Low);
 
     let spi = Spi::new(peripherals.SPI2,Config::default(),).unwrap().with_miso(miso).with_mosi(mosi).with_sck(sck);
-    let config = Config::default().with_frequency(625000.kHz()).with_mode(Mode::_0); 
+    let config = Config::default().with_frequency(62500.kHz()).with_mode(Mode::_0); 
 
     let spi_device = embedded_hal_bus::spi::ExclusiveDevice::new(spi, cs, delay).unwrap();
 
@@ -111,7 +111,7 @@ fn main() -> ! {
     let mut DeltaX=0;
 
     loop {
-
+        /*
         let mut data = [0u8];
         i2c.write_read(0x55, &[0xaa], &mut data).ok(); //0x55 is T-keyboard I2C ADDRESS !
         info!("data: {:#?}", data);
@@ -128,11 +128,11 @@ fn main() -> ! {
         }
         if (data == [116u8]){
             DeltaY -=step;
-        }
+        }*/
 
         let character_style = MonoTextStyle::new(&FONT_10X20, Rgb565::WHITE);
          // Draw centered text.
-        let text = "Alright Brother :D";
+        let text = "Alright";
 
         display.clear(Rgb565::BLACK);
         
